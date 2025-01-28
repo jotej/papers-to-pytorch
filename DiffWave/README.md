@@ -230,14 +230,13 @@ class _ResidualLayer(nn.Module):
 ```python
 class DiffWave(nn.Module):
     def __init__(self,
-        scheduler: str,
-        denoising_steps: int,
-        in_channels: int,
-        residual_channels: int,
-        residual_layers: int,
-        residual_blocks: int,
-        max_denoising_steps: int,
-        is_conditional: bool,
+        scheduler: str = 'linear_beta',
+        denoising_steps: int = 50,
+        in_channels: int = 1,
+        residual_channels: int = 64,
+        residual_layers: int = 30,
+        residual_blocks: int = 3,
+        is_conditional: bool = True,
         mel_bands: int = None,
     ):
         super().__init__()
@@ -252,7 +251,7 @@ class DiffWave(nn.Module):
                 residual_channels,
                 residual_layers,
                 residual_blocks,
-                max_denoising_steps,
+                denoising_steps,
                 is_conditional,
                 mel_bands,
             ),
