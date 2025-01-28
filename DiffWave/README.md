@@ -42,7 +42,7 @@ time domain, supporting both conditional and unconditional audio synthesis.
 
 ### DiffWaveDenoiser Module
 
-#### Full Denoiser Code:
+#### Full Denoiser Code
 ```python
 class _DiffWaveDenoiser(nn.Module):
     def __init__(self,
@@ -86,7 +86,7 @@ class _DiffWaveDenoiser(nn.Module):
         return out
 ```
 
-#### Class Attributes Notes:
+#### Class Attributes Notes
 - **self.res_blocks:** The residual layers instantiated are divided evenly between the residual blocks. This is because
   all residual blocks have the same dilation cycle in the paper (e.g., if there are $n$ residual layers and $m$
   residual blocks, then there are **$\frac{n}{m}$** residual layers per block, each with a dilation cycle of
@@ -95,20 +95,20 @@ class _DiffWaveDenoiser(nn.Module):
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
 #### Forward Pass Shapes
-| Variable | Initial Shape                                       | Final Shape                                            |
-|----------|-----------------------------------------------------|--------------------------------------------------------|
-| x        | $(B, C_{in}, T_{samples})$                          | $(B, C_{res}, T_{samples})$                            |
-| t        | $(B,)$                                              | $(B, 512)$                                             |
-| mel      | $(B, N, T_{spec})$ *if mel is not None else* $None$ | $(B, N, T_{samples})$ *if mel is not None else* $None$ | 
-| skips    | $(B, C_{res}, T_{samples})$                         | $(B, C_{res}, T_{samples})$                            |
-| skip     | $(B, C_{res}, T_{samples})$                         | $(B, C_{res}, T_{samples})$                            |
-| out      | $(B, C_{res}, T_{samples})$                         | $(B, C_{in}, T_{samples})$                             |
+| Variable | Initial Shape                                              | Final Shape                                                   |
+|----------|------------------------------------------------------------|---------------------------------------------------------------|
+| x        | $(B, C_{in}, T_{samples})$                                 | $(B, C_{res}, T_{samples})$                                   |
+| t        | $(B,)$                                                     | $(B, 512)$                                                    |
+| mel      | $(B, N, T_{spec})$ *if mel is not None else* $\text{None}$ | $(B, N, T_{samples})$ *if mel is not None else* $\text{None}$ | 
+| skips    | $(B, C_{res}, T_{samples})$                                | $(B, C_{res}, T_{samples})$                                   |
+| skip     | $(B, C_{res}, T_{samples})$                                | $(B, C_{res}, T_{samples})$                                   |
+| out      | $(B, C_{res}, T_{samples})$                                | $(B, C_{in}, T_{samples})$                                    |
 
 ---
 
 ### TimestepEmbedder Module
 
-#### Full Timestep Embedder Code:
+#### Full Timestep Embedder Code
 ```python
 class _TimestepEmbedder(nn.Module):
     def __init__(self, max_denoising_steps):
@@ -137,7 +137,7 @@ class _TimestepEmbedder(nn.Module):
         return t
 ```
 
-#### Class Attributes Notes:
+#### Class Attributes Notes
 - #### self.timestep_embeddings:
   $t_{\text{embedding}} = \left[
   \sin\left(10^{\frac{0 \times 4}{63}} t\right), \dots,
@@ -146,25 +146,7 @@ class _TimestepEmbedder(nn.Module):
   \cos\left(10^{\frac{63 \times 4}{63}} t\right)
   \right]$
 
-#### Forward Pass Notes:
-1. $t$ is the $(B, )$ tensor that holds the corresponding timestep of each sample in the batch. The output
-   $(B, 512)$ tensor consists of the corresponding final timestep embeddings for the batch:
-   ```python
-   def forward(self, t: torch.Tensor) -> torch.Tensor:
-   ```
-2. Each timestep in $t$ is first converted to their corresponding $(128, )$ initial timestep embeddings,
-   transforming $t$ from $(B, )$ to $(B, 128)$:
-   ```python
-       t = self.timestep_embeddings[t]
-   ```
-3. The initial timestep embeddings are then passed through two fully-connected layers and a Swish with
-   $\beta = 1$ (SiLU) to get the final embeddings, transforming $t$ from $(B, 128)$ to $(B, 512)$:
-   ```python
-       t = self.linear1(t)
-       t = self.swish(t)
-       t = self.linear2(t)
-       t = self.swish(t)
-       return t
-   ```
-   
+#### Forward Pass Shapes
+
+
 ---
