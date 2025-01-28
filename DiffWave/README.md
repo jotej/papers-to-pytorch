@@ -94,16 +94,15 @@ class _DiffWaveDenoiser(nn.Module):
   as: $r = (k-1) \sum_i d_i + 1$, where $k$ is the kernel size of the dilated convolutions in the residual layers, and
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
-#### Forward Pass Notes:
-| Variable  | Initial Shape                | Final Shape                                                                                                                                                               |
-|-----------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **x**     | $(B, C_{in}, T_{samples})$   | $(B, C_{res}, T_{samples})$                                                                                                                                               |
-| **t**     | $(B,)$                       | $(B, 512)$                                                                                                                                                                |
-| **mel**   | $(B, N)$                     | $\text{mel} = \begin{cases} \text{some value or expression}, & \text{if } \text{mel is None} \\ \text{self.spectrogram\_upsampler(mel)}, & \text{otherwise} \end{cases}$  | 
-| **skips** | $(B, C_{res}, T_{samples})$  | `(batch_size, C_hidden, H, W)` (aggregated skips)                                                                                                                         |
-| **skip**  | $(B, C_{res}, T_{samples})$  | `(batch_size, C_block, H, W)`                                                                                                                                             |
-| **out**   | $(B, C_{in}, T_{samples})$   | `(batch_size, C_out, H, W)`                                                                                                                                               |
-
+#### Forward Pass Shapes
+| Variable  | Initial Shape                                          | Final Shape                                               |
+|-----------|--------------------------------------------------------|-----------------------------------------------------------|
+| **x**     | $(B, C_{in}, T_{samples})$                             | $(B, C_{res}, T_{samples})$                               |
+| **t**     | $(B,)$                                                 | $(B, 512)$                                                |
+| **mel**   | $(B, N, T_{spec})\text{ if mel is not None else }None$ | $(B, N, T_{samples})\text{ if mel is not None else }None$ | 
+| **skips** | $(B, C_{res}, T_{samples})$                            | $(B, C_{res}, T_{samples})$                               |
+| **skip**  | $(B, C_{res}, T_{samples})$                            | $(B, C_{res}, T_{samples})$                               |
+| **out**   | $(B, C_{res}, T_{samples})$                            | $(B, C_{in}, T_{samples})$                                |
 
 ---
 
