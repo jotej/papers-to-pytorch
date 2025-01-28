@@ -209,9 +209,9 @@ class _ResidualLayer(nn.Module):
 ```
 
 #### Class Attributes Notes
-- **self.bi_dilated_conv:** Expands the "x" channel dimensions from $C_{res}$ to $2\cdot{C_{res}}$, and dilates
+- **self.bi_dilated_conv:** Expands the **x** channel dimensions from $C_{res}$ to $2\cdot{C_{res}}$, and dilates
   according to the residual layer's part of the dilation cycle in the corresponding residual block in order to increase
-  the receptive field of "x".
+  the receptive field of **x**.
 
 #### Forward Pass Shapes
 | Variable | Initial Shape              | Final Shape                |
