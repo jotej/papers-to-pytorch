@@ -2,13 +2,13 @@
 
 ### Authors
 
-| Name                 | Affiliation                             | Email                                                 |
-|----------------------|-----------------------------------------|-------------------------------------------------------|
-| **Zhifeng Kong**     | Computer Science and Engineering, UCSD  | [z4kong@eng.ucsd.edu](mailto:z4kong@eng.ucsd.edu)     |
-| **Jiaji Huang**      | Baidu Research                          | [huangjiaji@baidu.com](mailto:huangjiaji@baidu.com)   |
-| **Kexin Zhao**       | Baidu Research                          | [kexinzhao@baidu.com](mailto:kexinzhao@baidu.com)     |
-| **Wei Ping**         | NVIDIA                                  | [wping@nvidia.com](mailto:wping@nvidia.com)           |
-| **Bryan Catanzaro**  | NVIDIA                                  | [bcatanzaro@nvidia.com](mailto:bcatanzaro@nvidia.com) |
+| Name                 | Affiliation                             |
+|----------------------|-----------------------------------------|
+| **Zhifeng Kong**     | Computer Science and Engineering, UCSD  |
+| **Jiaji Huang**      | Baidu Research                          |
+| **Kexin Zhao**       | Baidu Research                          |
+| **Wei Ping**         | NVIDIA                                  |
+| **Bryan Catanzaro**  | NVIDIA                                  |
 
 ### Model Description
 A non-autoregressive denoising diffusion probabilistic model for waveform generation directly in the
