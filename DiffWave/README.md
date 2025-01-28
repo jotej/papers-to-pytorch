@@ -94,14 +94,14 @@ class _DiffWaveDenoiser(nn.Module):
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
 #### Forward Pass Shapes
-| Variable | Initial Shape                | Final Shape                |
-|----------|------------------------------|----------------------------|
-| x        | $(B, C_{in}, T_{sample})$    | $(B, C_{res}, T_{sample})$ |
-| t        | $(B,)$                       | $(B, 512)$                 |
-| mel      | $(B, N, T_{spec})$           | $(B, N, T_{sample})$       | 
-| skips    | $(B, C_{res}, T_{sample})$   | $(B, C_{res}, T_{sample})$ |
-| skip     | $(B, C_{res}, T_{sample})$   | $(B, C_{res}, T_{sample})$ |
-| out      | $(B, C_{res}, T_{sample})$   | $(B, C_{in}, T_{sample})$  |
+| Variable | Initial Shape              | Final Shape                |
+|----------|----------------------------|----------------------------|
+| x        | $(B, C_{in}, T_{sample})$  | $(B, C_{res}, T_{sample})$ |
+| t        | $(B,)$                     | $(B, 512)$                 |
+| mel      | $(B, N, T_{spec})$         | $(B, N, T_{sample})$       | 
+| skips    | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
+| skip     | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
+| out      | $(B, C_{res}, T_{sample})$ | $(B, C_{in}, T_{sample})$  |
 
 ---
 
@@ -209,9 +209,9 @@ class _ResidualLayer(nn.Module):
 ```
 
 #### Class Attributes Notes
-- **self.bi_dilated_conv:** Expands the **x** channel dimensions from $C_{res}$ to $2\cdot{C_{res}}$, and dilates
+- **self.bi_dilated_conv:** Expands the channel dimensions of **x** from $C_{res}$ to $2\cdot{C_{res}}$, and dilates
   according to the residual layer's part of the dilation cycle in the corresponding residual block in order to increase
-  the receptive field of **x**.
+  its receptive field.
 
 #### Forward Pass Shapes
 | Variable | Initial Shape              | Final Shape                |
