@@ -17,23 +17,23 @@ time domain, supporting both conditional and unconditional audio synthesis.
 ## [Full Implementation](model.py)
 
 #### Dimension Symbols
-| $\text{Symbol}$ | $\text{Description}$                                     |
-|-----------------|----------------------------------------------------------|
-| $B$             | $\text{Batch size}$                                      |
-| $C_{in}$        | $\text{Number of input channels}$                        |
-| $C_{res}$       | $\text{Number of residual channels}$                     |
-| $N$             | $\text{Number of mel frequency bins in conditional Mel}$ |
-| $T_{spec}$      | $\text{Total time frames in conditional Mel}$            |
-| $T_{samples}$   | $\text{Total samples in the waveform}$                   |
+| Symbol        | Description                                      |
+|---------------|--------------------------------------------------|
+| $B$           | Batch size                                       |
+| $C_{in}$      | Number of input channels                         |
+| $C_{res}$     | Number of residual channels                      |
+| $N$           | Number of mel frequency bins in conditional Mel  |
+| $T_{spec}$    | Total time frames in conditional Mel             |
+| $T_{samples}$ | Total samples in the waveform                    |
 
 #### Custom Modules
-| $\text{Module}$                                       | $\text{Description}$                               |
-|-------------------------------------------------------|----------------------------------------------------|
-| [$\text{DiffWaveDenoiser}$](#DiffWaveDenoiser-Module) | $\text{Model denoiser}$                            |
-| [$\text{TimestepEmbedder}$](#TimestepEmbedder-Module) | $\text{Timestep embedder of denoiser}$             |
-| MelUpsampler                                          | $\text{Upsampler for conditional Mel Spectrogram}$ |
-| ResidualLayer                                         | $\text{Individual layers of denoiser}$             |
-| DiffWave                                              | $\text{Entire model}$                              |
+| Module                                       | Description                                 |
+|----------------------------------------------|---------------------------------------------|
+| [DiffWaveDenoiser](#DiffWaveDenoiser-Module) | Model denoiser                              |
+| [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser               |
+| MelUpsampler                                 | Upsampler for conditional Mel Spectrogram   |
+| ResidualLayer                                | Individual layers of denoiser               |
+| DiffWave                                     | Entire model                                |
 
 
 *The entire model implementation will be explained below, and in the order that I believe is most intuitive...*
@@ -95,14 +95,14 @@ class _DiffWaveDenoiser(nn.Module):
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
 #### Forward Pass Notes:
-| Variable | Initial Shape               | Final Shape                                                                                                                                                                |
-|----------|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| $x$      | $(B, C_{in}, T_{samples})$  | $(B, C_{res}, T_{samples})$                                                                                                                                                |
-| $t$      | $(B,)$                      | $(B, 512)$                                                                                                                                                                 |
-| $mel$    | $(B, N) $                   | $$\text{mel} = \begin{cases} \text{some value or expression}, & \text{if } \text{mel is None} \\ \text{self.spectrogram\_upsampler(mel)}, & \text{otherwise} \end{cases}$$ |
-| $skips$  | $(B, C_{res}, T_{samples})$ | `(batch_size, C_hidden, H, W)` (aggregated skips)                                                                                                                          |
-| $skip$   | $(B, C_{res}, T_{samples})$ | `(batch_size, C_block, H, W)`                                                                                                                                              |
-| $out$    | $(B, C_{in}, T_{samples})$  | `(batch_size, C_out, H, W)`                                                                                                                                                |
+| Variable  | Initial Shape                | Final Shape                                                                                                                                                               |
+|-----------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **x**     | $(B, C_{in}, T_{samples})$   | $(B, C_{res}, T_{samples})$                                                                                                                                               |
+| **t**     | $(B,)$                       | $(B, 512)$                                                                                                                                                                |
+| **mel**   | $(B, N)$                     | $\text{mel} = \begin{cases} \text{some value or expression}, & \text{if } \text{mel is None} \\ \text{self.spectrogram\_upsampler(mel)}, & \text{otherwise} \end{cases}$  | 
+| **skips** | $(B, C_{res}, T_{samples})$  | `(batch_size, C_hidden, H, W)` (aggregated skips)                                                                                                                         |
+| **skip**  | $(B, C_{res}, T_{samples})$  | `(batch_size, C_block, H, W)`                                                                                                                                             |
+| **out**   | $(B, C_{in}, T_{samples})$   | `(batch_size, C_out, H, W)`                                                                                                                                               |
 
 
 ---
