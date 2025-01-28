@@ -17,23 +17,23 @@ time domain, supporting both conditional and unconditional audio synthesis.
 ## [Full Implementation](model.py)
 
 #### Dimension Symbols
-| Symbol        | Description                                      |
-|---------------|--------------------------------------------------|
-| $B$           | Batch size                                       |
-| $C_{in}$      | Number of input channels                         |
-| $C_{res}$     | Number of residual channels                      |
-| $N$           | Number of mel frequency bins in conditional Mel  |
-| $T_{spec}$    | Total time frames in conditional Mel             |
-| $T_{samples}$ | Total samples in the waveform                    |
+| Symbol        | Description                                                 |
+|---------------|-------------------------------------------------------------|
+| $B$           | Batch size                                                  |
+| $C_{in}$      | Number of input channels                                    |
+| $C_{res}$     | Number of residual channels                                 |
+| $N$           | Number of mel frequency bins in conditional Mel spectrogram |
+| $T_{spec}$    | Total time frames in conditional Mel spectrogram            |
+| $T_{samples}$ | Total samples in the waveform                               |
 
 #### Custom Modules
-| Module                                       | Description                                 |
-|----------------------------------------------|---------------------------------------------|
-| [DiffWaveDenoiser](#DiffWaveDenoiser-Module) | Model denoiser                              |
-| [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser               |
-| MelUpsampler                                 | Upsampler for conditional Mel Spectrogram   |
-| ResidualLayer                                | Individual layers of denoiser               |
-| DiffWave                                     | Entire model                                |
+| Module                                       | Description                               |
+|----------------------------------------------|-------------------------------------------|
+| [DiffWaveDenoiser](#DiffWaveDenoiser-Module) | Model denoiser                            |
+| [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser             |
+| MelUpsampler                                 | Upsampler for conditional Mel spectrogram |
+| ResidualLayer                                | Individual layers of denoiser             |
+| DiffWave                                     | Entire model                              |
 
 
 *The entire model implementation will be explained below, and in the order that I believe is most intuitive...*
