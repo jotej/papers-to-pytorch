@@ -277,21 +277,17 @@ class DiffWave(nn.Module):
 - **self.ddpm:** An instance of DDPM with [DiffWaveDenoiser](#DiffWaveDenoiser-Module) as the denoiser.
 
 #### Noise Pass Shapes
-| Variable      | Initial Shape             | Final Shape               |
-|---------------|---------------------------|---------------------------|
-| x *(input 1)* | $(B, C_{in}, T_{sample})$ | $(B, C_{in}, T_{sample})$ |
-| t *(input 2)* | $(B,)$                    | $(B,)$                    |
-| *(output 1)*  | $(B, C_{in}, T_{sample})$ | $(B, C_{in}, T_{sample})$ |
-| *(output 2)*  | $(B, C_{in}, T_{sample})$ | $(B, C_{in}, T_{sample})$ |
+| Variable  | Initial Shape             | Final Shape               |
+|-----------|---------------------------|---------------------------|
+| x         | $(B, C_{in}, T_{sample})$ | $(B, C_{in}, T_{sample})$ |
+| t         | $(B,)$                    | $(B,)$                    |
 
 #### Denoise Pass Shapes
-| Variable        | Initial Shape               | Final Shape               |
-|-----------------|-----------------------------|---------------------------|
-| x *(input 1)*   | $(B, C_{in}, T_{sample})$   | $(B, C_{in}, T_{sample})$ |
-| t *(input 2)*   | $(B,)$                      | $(B,)$                    |
-| mel *(input 3)* | $(B, N, T_{spec})$          | $(B, N, T_{spec})$        |
-| *(output 1)*    | $(B, C_{in}, T_{sample})$   | $(B, C_{in}, T_{sample})$ |
-| *(output 2)*    | $(B, C_{in}, T_{sample})$   | $(B, C_{in}, T_{sample})$ |
+| Variable | Initial Shape               | Final Shape               |
+|----------|-----------------------------|---------------------------|
+| x        | $(B, C_{in}, T_{sample})$   | $(B, C_{in}, T_{sample})$ |
+| t        | $(B,)$                      | $(B,)$                    |
+| mel      | $(B, N, T_{spec})$          | $(B, N, T_{spec})$        |
 
 ---
 
