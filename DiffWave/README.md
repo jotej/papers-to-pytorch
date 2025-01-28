@@ -33,10 +33,10 @@ time domain, supporting both conditional and unconditional audio synthesis.
 | [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser             |
 | [MelUpsampler](#MelUpsampler-Module)         | Upsampler for conditional Mel spectrogram |
 | [ResidualLayer](#ResidualLayer-Module)       | Individual layers of denoiser             |
-| [DiffWave](#DiffWave-Module)                 | Entire model                              |
+| [DiffWave](#DiffWave-Module)                 | Model                                     |
 
 
-*The entire model implementation is detailed below, and in the order that I believe is most intuitive...*
+*The entire model implementation is detailed below in what is believed to be the most intuitive order...*
 
 ---
 
