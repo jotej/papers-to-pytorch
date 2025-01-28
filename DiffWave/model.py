@@ -83,7 +83,7 @@ class _DiffWaveDenoiser(nn.Module):
         super().__init__()
         self.in_conv = nn.Conv1d(in_channels, residual_channels, 1)
         self.timestep_embedder = _TimestepEmbedder(max_denoising_steps)
-        self.spectrogram_upsampler = _MelUpsampler()
+        self.mel_upsampler = _MelUpsampler()
         self.res_blocks = nn.ModuleList([
             nn.ModuleList([
                 _ResidualLayer(residual_channels, 2**i, mel_bands) if is_conditional
@@ -100,7 +100,7 @@ class _DiffWaveDenoiser(nn.Module):
         x = self.in_conv(x)
         x = self.relu(x)
         t = self.timestep_embedder(t)
-        if mel is not None: mel = self.spectrogram_upsampler(mel)
+        if mel is not None: mel = self.mel_upsampler(mel)
         skips = None
         for block in self.res_blocks:
             for layer in block:

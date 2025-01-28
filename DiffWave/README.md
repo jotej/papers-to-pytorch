@@ -17,14 +17,14 @@ time domain, supporting both conditional and unconditional audio synthesis.
 ## [Full Implementation](#All-Modules)
 
 #### Dimension Symbols
-| Symbol         | Description                                                 |
-|----------------|-------------------------------------------------------------|
-| $B$            | Batch size                                                  |
-| $C_{in}$       | Number of input channels                                    |
-| $C_{res}$      | Number of residual channels                                 |
-| $N$            | Number of mel frequency bins in conditional Mel spectrogram |
-| $T_{spec}$     | Total time frames in conditional Mel spectrogram            |
-| $T_{sample}$   | Total samples in waveform                                   |
+| Symbol          | Description                                                 |
+|-----------------|-------------------------------------------------------------|
+| $B$             | Batch size                                                  |
+| $C_{in}$        | Number of input channels                                    |
+| $C_{res}$       | Number of residual channels                                 |
+| $N$             | Number of mel frequency bins in conditional Mel spectrogram |
+| $T_{mel}$       | Total time frames in conditional Mel spectrogram            |
+| $T_{sample}$    | Total samples in waveform                                   |
 
 #### Custom Modules
 | Module                                       | Description                               |
@@ -56,7 +56,7 @@ class _DiffWaveDenoiser(nn.Module):
         super().__init__()
         self.in_conv = nn.Conv1d(in_channels, residual_channels, 1)
         self.timestep_embedder = _TimestepEmbedder(max_denoising_steps)
-        self.spectrogram_upsampler = _MelUpsampler()
+        self.mel_upsampler = _MelUpsampler()
         self.res_blocks = nn.ModuleList([
             nn.ModuleList([
                 _ResidualLayer(residual_channels, 2**i, mel_bands) if is_conditional
@@ -73,7 +73,7 @@ class _DiffWaveDenoiser(nn.Module):
         x = self.in_conv(x)
         x = self.relu(x)
         t = self.timestep_embedder(t)
-        if mel is not None: mel = self.spectrogram_upsampler(mel)
+        if mel is not None: mel = self.mel_upsampler(mel)
         skips = None
         for block in self.res_blocks:
             for layer in block:
@@ -94,14 +94,14 @@ class _DiffWaveDenoiser(nn.Module):
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
 #### Forward Pass Shapes
-| Variable | Initial Shape              | Final Shape                |
-|----------|----------------------------|----------------------------|
-| x        | $(B, C_{in}, T_{sample})$  | $(B, C_{res}, T_{sample})$ |
-| t        | $(B,)$                     | $(B, 512)$                 |
-| mel      | $(B, N, T_{spec})$         | $(B, N, T_{sample})$       | 
-| skips    | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
-| skip     | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
-| out      | $(B, C_{res}, T_{sample})$ | $(B, C_{in}, T_{sample})$  |
+| Variable | Initial Shape               | Final Shape                  |
+|----------|-----------------------------|------------------------------|
+| x        | $(B, C_{in}, T_{sample})$   | $(B, C_{res}, T_{sample})$   |
+| t        | $(B,)$                      | $(B, 512)$                   |
+| mel      | $(B, N, T_{mel})$           | $(B, N, T_{sample})$         | 
+| skips    | $(B, C_{res}, T_{sample})$  | $(B, C_{res}, T_{sample})$   |
+| skip     | $(B, C_{res}, T_{sample})$  | $(B, C_{res}, T_{sample})$   |
+| out      | $(B, C_{res}, T_{sample})$  | $(B, C_{in}, T_{sample})$    |
 
 ---
 
@@ -174,13 +174,13 @@ class _MelUpsampler(nn.Module):
 ```
 
 #### Class Attributes Notes
-- **self.convt1, self.convt2:** Expands the input Mel spectrogram's time frame dimension $T_{spec}$ to the total
+- **self.convt1, self.convt2:** Expands the input Mel spectrogram's time frame dimension $T_{mel}$ to the total
   number of samples in the waveform $T_{sample}$.
 
 #### Forward Pass Shapes
-| Variable | Initial Shape      | Final Shape            |
-|----------|--------------------|------------------------|
-| mel      | $(B, N, T_{spec})$ | $(B, N, T_{sample})$   |
+| Variable | Initial Shape       | Final Shape            |
+|----------|---------------------|------------------------|
+| mel      | $(B, N, T_{mel})$   | $(B, N, T_{sample})$   |
 
 ---
 
@@ -282,11 +282,11 @@ class DiffWave(nn.Module):
 | t         | $(B,)$                    | $(B,)$                    |
 
 #### Denoise Pass Shapes
-| Variable | Initial Shape               | Final Shape               |
-|----------|-----------------------------|---------------------------|
-| x        | $(B, C_{in}, T_{sample})$   | $(B, C_{in}, T_{sample})$ |
-| t        | $(B,)$                      | $(B,)$                    |
-| mel      | $(B, N, T_{spec})$          | $(B, N, T_{spec})$        |
+| Variable | Initial Shape                | Final Shape                 |
+|----------|------------------------------|-----------------------------|
+| x        | $(B, C_{in}, T_{sample})$    | $(B, C_{in}, T_{sample})$   |
+| t        | $(B,)$                       | $(B,)$                      |
+| mel      | $(B, N, T_{mel})$            | $(B, N, T_{mel})$           |
 
 ---
 
@@ -377,7 +377,7 @@ class _DiffWaveDenoiser(nn.Module):
         super().__init__()
         self.in_conv = nn.Conv1d(in_channels, residual_channels, 1)
         self.timestep_embedder = _TimestepEmbedder(max_denoising_steps)
-        self.spectrogram_upsampler = _MelUpsampler()
+        self.mel_upsampler = _MelUpsampler()
         self.res_blocks = nn.ModuleList([
             nn.ModuleList([
                 _ResidualLayer(residual_channels, 2**i, mel_bands) if is_conditional
@@ -394,7 +394,7 @@ class _DiffWaveDenoiser(nn.Module):
         x = self.in_conv(x)
         x = self.relu(x)
         t = self.timestep_embedder(t)
-        if mel is not None: mel = self.spectrogram_upsampler(mel)
+        if mel is not None: mel = self.mel_upsampler(mel)
         skips = None
         for block in self.res_blocks:
             for layer in block:
