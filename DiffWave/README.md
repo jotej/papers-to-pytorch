@@ -95,14 +95,14 @@ class _DiffWaveDenoiser(nn.Module):
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
 #### Forward Pass Shapes
-| Variable | Initial Shape                                    | Final Shape                                         |
-|----------|--------------------------------------------------|-----------------------------------------------------|
-| x        | $(B, C_{in}, T_{samples})$                       | $(B, C_{res}, T_{samples})$                         |
-| t        | $(B,)$                                           | $(B, 512)$                                          |
-| mel      | $(B, N, T_{spec})$ if mel is not None else $N/A$ | $(B, N, T_{samples})$ if mel is not None else $N/A$ | 
-| skips    | $(B, C_{res}, T_{samples})$                      | $(B, C_{res}, T_{samples})$                         |
-| skip     | $(B, C_{res}, T_{samples})$                      | $(B, C_{res}, T_{samples})$                         |
-| out      | $(B, C_{res}, T_{samples})$                      | $(B, C_{in}, T_{samples})$                          |
+| Variable | Initial Shape                                       | Final Shape                                            |
+|----------|-----------------------------------------------------|--------------------------------------------------------|
+| x        | $(B, C_{in}, T_{samples})$                          | $(B, C_{res}, T_{samples})$                            |
+| t        | $(B,)$                                              | $(B, 512)$                                             |
+| mel      | $(B, N, T_{spec})$ *if mel is not None else* $None$ | $(B, N, T_{samples})$ *if mel is not None else* $None$ | 
+| skips    | $(B, C_{res}, T_{samples})$                         | $(B, C_{res}, T_{samples})$                            |
+| skip     | $(B, C_{res}, T_{samples})$                         | $(B, C_{res}, T_{samples})$                            |
+| out      | $(B, C_{res}, T_{samples})$                         | $(B, C_{in}, T_{samples})$                             |
 
 ---
 
