@@ -17,26 +17,26 @@ time domain, supporting both conditional and unconditional audio synthesis.
 ## [Full Implementation](model.py)
 
 #### Dimension Symbols
-| Symbol        | Description                                                 |
-|---------------|-------------------------------------------------------------|
-| $B$           | Batch size                                                  |
-| $C_{in}$      | Number of input channels                                    |
-| $C_{res}$     | Number of residual channels                                 |
-| $N$           | Number of mel frequency bins in conditional Mel spectrogram |
-| $T_{spec}$    | Total time frames in conditional Mel spectrogram            |
-| $T_{samples}$ | Total samples in the waveform                               |
+| Symbol         | Description                                                 |
+|----------------|-------------------------------------------------------------|
+| $B$            | Batch size                                                  |
+| $C_{in}$       | Number of input channels                                    |
+| $C_{res}$      | Number of residual channels                                 |
+| $N$            | Number of mel frequency bins in conditional Mel spectrogram |
+| $T_{spec}$     | Total time frames in conditional Mel spectrogram            |
+| $T_{sample}$   | Total samples in waveform                                   |
 
 #### Custom Modules
 | Module                                       | Description                               |
 |----------------------------------------------|-------------------------------------------|
 | [DiffWaveDenoiser](#DiffWaveDenoiser-Module) | Model denoiser                            |
 | [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser             |
-| MelUpsampler                                 | Upsampler for conditional Mel spectrogram |
-| ResidualLayer                                | Individual layers of denoiser             |
+| [MelUpsampler](#MelUpsampler-Module)         | Upsampler for conditional Mel spectrogram |
+| [ResidualLayer](#ResidualLayer-Module)       | Individual layers of denoiser             |
 | DiffWave                                     | Entire model                              |
 
 
-*The entire model implementation will be explained below, and in the order that I believe is most intuitive...*
+*The entire model implementation is detailed below, and in the order that I believe is most intuitive...*
 
 ---
 
@@ -95,14 +95,14 @@ class _DiffWaveDenoiser(nn.Module):
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
 #### Forward Pass Shapes
-| Variable | Initial Shape               | Final Shape                                                  |
-|----------|-----------------------------|--------------------------------------------------------------|
-| x        | $(B, C_{in}, T_{samples})$  | $(B, C_{res}, T_{samples})$                                  |
-| t        | $(B,)$                      | $(B, 512)$                                                   |
-| mel      | $(B, N, T_{spec})$          | $(B, N, T_{samples})$ if mel is not None else  $\text{None}$ | 
-| skips    | $(B, C_{res}, T_{samples})$ | $(B, C_{res}, T_{samples})$                                  |
-| skip     | $(B, C_{res}, T_{samples})$ | $(B, C_{res}, T_{samples})$                                  |
-| out      | $(B, C_{res}, T_{samples})$ | $(B, C_{in}, T_{samples})$                                   |
+| Variable | Initial Shape                | Final Shape                                                   |
+|----------|------------------------------|---------------------------------------------------------------|
+| x        | $(B, C_{in}, T_{sample})$    | $(B, C_{res}, T_{sample})$                                    |
+| t        | $(B,)$                       | $(B, 512)$                                                    |
+| mel      | $(B, N, T_{spec})$           | $(B, N, T_{sample})$ if mel is not None else  $\text{None}$   | 
+| skips    | $(B, C_{res}, T_{sample})$   | $(B, C_{res}, T_{sample})$                                    |
+| skip     | $(B, C_{res}, T_{sample})$   | $(B, C_{res}, T_{sample})$                                    |
+| out      | $(B, C_{res}, T_{sample})$   | $(B, C_{in}, T_{sample})$                                     |
 
 ---
 
@@ -147,6 +147,82 @@ class _TimestepEmbedder(nn.Module):
   \right]$
 
 #### Forward Pass Shapes
-
+| Variable | Initial Shape | Final Shape |
+|----------|---------------|-------------|
+| t        | $(B, )$       | $(B, 512)$  |
 
 ---
+
+### MelUpsampler Module
+
+#### Full Mel Upsampler Code
+```python
+class _MelUpsampler(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.convt1 = nn.ConvTranspose2d(1, 1, kernel_size=(3, 32), stride=(1, 16),
+                                          padding=(1, 12))
+        self.convt2 = nn.ConvTranspose2d(1, 1, kernel_size=(3, 32), stride=(1, 16),
+                                          padding=(1, 8))
+        self.leaky_relu = nn.LeakyReLU(0.4)
+
+    def forward(self, mel: torch.Tensor) -> torch.Tensor:
+        mel = mel.unsqueeze(1)
+        mel = self.convt1(mel)
+        mel = self.leaky_relu(mel)
+        mel = self.convt2(mel)
+        mel = self.leaky_relu(mel)
+        mel = mel.squeeze(1)
+        return mel
+```
+
+#### Class Attributes Notes
+- **self.convt1, self.convt2:** Expands the input Mel spectrogram's time frame dimension $T_{spec}$ to the total
+  number of samples in the waveform $T_{sample}$.
+
+#### Forward Pass Shapes
+| Variable | Initial Shape      | Final Shape            |
+|----------|--------------------|------------------------|
+| mel      | $(B, N, T_{spec})$ | $(B, N, T_{sample})$   |
+
+---
+
+### ResidualLayer Module
+
+#### Full Residual Layer Code
+```python
+class _ResidualLayer(nn.Module):
+    def __init__(self, residual_channels, dilation, mel_bands):
+        super().__init__()
+        self.timestep_linear = nn.Linear(512, residual_channels)
+        self.bi_dilated_conv = nn.Conv1d(residual_channels, 2*residual_channels, 3, 1, dilation,
+                                         dilation)
+        self.mel_conv = None if mel_bands is None else nn.Conv1d(mel_bands, 2*residual_channels, 1)
+        self.res_conv = nn.Conv1d(residual_channels, residual_channels, 1)
+        self.skip_conv = nn.Conv1d(residual_channels, residual_channels, 1)
+        self.sigmoid = nn.Sigmoid()
+        self.tanh = nn.Tanh()
+
+    def forward(self, x: torch.Tensor, t: torch.Tensor, mel: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        residual = x
+        x = x + self.timestep_linear(t).unsqueeze(2)
+        x = self.bi_dilated_conv(x) if self.mel_conv is None else self.bi_dilated_conv(x) + self.mel_conv(mel)
+        gates, filters = x.chunk(2, 1)
+        x = self.sigmoid(gates) * self.tanh(filters)
+        return self.res_conv(x) + residual, self.skip_conv(x)
+```
+
+#### Class Attributes Notes
+- **self.bi_dilated_conv:** Expands the "x" channel dimensions from $C_{res}$ to $2\cdot{C_{res}}$, and dilates
+  according to the residual layer's part of the dilation cycle in the corresponding residual block to increase the
+  receptive field of "x".
+
+#### Forward Pass Shape
+| Variable | Initial Shape              | Final Shape                |
+|----------|----------------------------|----------------------------|
+| x        | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
+| residual | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
+| t        | $(B, 512)$                 | $(B, 512)$                 |
+| mel      | $(B, N, T_{sample})$       | $(B, N, T_{sample})$       |
+| gates    | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
+| filters  | $(B, C_{res}, T_{sample})$ | $(B, C_{res}, T_{sample})$ |
