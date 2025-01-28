@@ -17,18 +17,24 @@ time domain, supporting both conditional and unconditional audio synthesis.
 ## [Full Implementation](model.py)
 
 #### Dimension Symbols
-| Symbol    | Description                 |
-|-----------|-----------------------------|
-| $B$       | Batch size                  |
-| $C_{in}$  | Number of input channels    |
-| $C_{res}$ | Number of residual channels |
-| $D$       | Dimensionality of the data  |
+| $\text{Symbol}$ | $\text{Description}$                                     |
+|-----------------|----------------------------------------------------------|
+| $B$             | $\text{Batch size}$                                      |
+| $C_{in}$        | $\text{Number of input channels}$                        |
+| $C_{res}$       | $\text{Number of residual channels}$                     |
+| $N$             | $\text{Number of mel frequency bins in conditional Mel}$ |
+| $T_{spec}$      | $\text{Total time frames in conditional Mel}$            |
+| $T_{samples}$   | $\text{Total samples in the waveform}$                   |
 
-#### This implementation has 4 custom modules:
-- **[DiffWaveDenoiser](#DiffWaveDenoiser-Module):** Encapsulates all denoiser components.
-- **[TimestepEmbedder](#TimestepEmbedder-Module):** The timestep embedder of the denoiser.
-- **ResidualLayer**: The individual layers of the denoiser.
-- **DiffWave:** Encapsulates the entire model, including the noising and denoising processes.
+#### Custom Modules
+| $\text{Module}$                                       | $\text{Description}$                               |
+|-------------------------------------------------------|----------------------------------------------------|
+| [$\text{DiffWaveDenoiser}$](#DiffWaveDenoiser-Module) | $\text{Model denoiser}$                            |
+| [$\text{TimestepEmbedder}$](#TimestepEmbedder-Module) | $\text{Timestep embedder of denoiser}$             |
+| MelUpsampler                                          | $\text{Upsampler for conditional Mel Spectrogram}$ |
+| ResidualLayer                                         | $\text{Individual layers of denoiser}$             |
+| DiffWave                                              | $\text{Entire model}$                              |
+
 
 *The entire model implementation will be explained below, and in the order that I believe is most intuitive...*
 
@@ -38,41 +44,45 @@ time domain, supporting both conditional and unconditional audio synthesis.
 
 #### Full Denoiser Code:
 ```python
-class DiffWaveDenoiser(nn.Module):
+class _DiffWaveDenoiser(nn.Module):
     def __init__(self,
-                 in_channels: int,
-                 residual_channels: int,
-                 residual_blocks: int,
-                 residual_layers: int,
-                 max_denoising_steps: int
-                 ):
+        in_channels,
+        residual_channels,
+        residual_layers,
+        residual_blocks,
+        max_denoising_steps,
+        is_conditional,
+        mel_bands,
+    ):
         super().__init__()
-        assert residual_layers % residual_blocks == 0, "residual_layers must be evenly divisible by residual_blocks"
         self.in_conv = nn.Conv1d(in_channels, residual_channels, 1)
-        self.timestep_embedder = TimestepEmbedder(max_denoising_steps)
+        self.timestep_embedder = _TimestepEmbedder(max_denoising_steps)
+        self.spectrogram_upsampler = _MelUpsampler()
         self.res_blocks = nn.ModuleList([
             nn.ModuleList([
-                ResidualLayer(residual_channels, 2**i)
+                _ResidualLayer(residual_channels, 2**i, mel_bands) if is_conditional
+                else _ResidualLayer(residual_channels, 2**i, None)
                 for i in range(residual_layers // residual_blocks)
             ])
             for _ in range(residual_blocks)
         ])
-        self.out_conv_1 = nn.Conv1d(residual_channels, residual_channels, 1)
-        self.out_conv_2 = nn.Conv1d(residual_channels, in_channels, 1)
+        self.out_conv1 = nn.Conv1d(residual_channels, residual_channels, 1)
+        self.out_conv2 = nn.Conv1d(residual_channels, in_channels, 1)
         self.relu = nn.ReLU()
 
-    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, t: torch.Tensor, mel: torch.Tensor) -> torch.Tensor:
         x = self.in_conv(x)
         x = self.relu(x)
         t = self.timestep_embedder(t)
+        if mel is not None: mel = self.spectrogram_upsampler(mel)
         skips = None
         for block in self.res_blocks:
             for layer in block:
-                x, skip = layer(x, t)
+                x, skip = layer(x, t, mel)
                 skips = skip if skips is None else skips + skip
-        out = self.out_conv_1(skips)
+        out = self.out_conv1(skips)
         out = self.relu(out)
-        out = self.out_conv_2(out)
+        out = self.out_conv2(out)
         return out
 ```
 
@@ -85,42 +95,15 @@ class DiffWaveDenoiser(nn.Module):
   $d_i$ is the dilation rate at the $i$-th residual layer.
 
 #### Forward Pass Notes:
-1. $x$ is the $(B, C_{in}, D)$ waveform tensor at timestep $t$ of the denoising process.
-   $t$ is the $(B, )$ tensor that holds the corresponding timestep of each sample in the batch. The output will be
-   the predicted noise $\hat{\epsilon}$ in $x$:
-    ```python
-    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-    ```
-2. The forward pass of the denoiser begins with a convolution and ReLU. The convolution increases the input
-   channels $C_{in}$ to the desired number of residual channels to be used $C_{res}$:
-    ```python
-        x = self.in_conv(x)
-        x = self.relu(x)
-    ```
-3. Each timestep in $t$ is then embedded as a $(512, )$ tensor via the
-   [timestep embedder](#TimestepEmbedder-Module), transforming $t$ from $(B, )$ to $(B, 512)$:
-   ```python
-       t = self.timestep_embedder(t)
-   ```
+| Variable | Initial Shape               | Final Shape                                                                                                                                                                |
+|----------|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| $x$      | $(B, C_{in}, T_{samples})$  | $(B, C_{res}, T_{samples})$                                                                                                                                                |
+| $t$      | $(B,)$                      | $(B, 512)$                                                                                                                                                                 |
+| $mel$    | $(B, N) $                   | $$\text{mel} = \begin{cases} \text{some value or expression}, & \text{if } \text{mel is None} \\ \text{self.spectrogram\_upsampler(mel)}, & \text{otherwise} \end{cases}$$ |
+| $skips$  | $(B, C_{res}, T_{samples})$ | `(batch_size, C_hidden, H, W)` (aggregated skips)                                                                                                                          |
+| $skip$   | $(B, C_{res}, T_{samples})$ | `(batch_size, C_block, H, W)`                                                                                                                                              |
+| $out$    | $(B, C_{in}, T_{samples})$  | `(batch_size, C_out, H, W)`                                                                                                                                                |
 
-4. $x$ and $t$ are then passed through every residual layer of every residual block. $t$ stays the same for
-   each layer. The skip connections $skip$ are additively accumulated into $skips$:
-    ```python
-        skips = None
-        for block in self.res_blocks:
-            for layer in block:
-                x, skip = layer(x, t)
-                skips = skip if skips is None else skips + skip
-    ```
-
-5. Once $x$ has passed through all residual layers, two convolutions and a ReLU transform $skips$
-   from $(B, C_{res}, D)$ to the initial $x$ dimensions $(B, C_{in}, D)$:
-    ```python
-        out = self.out_conv_1(skips)
-        out = self.relu(out)
-        out = self.out_conv_2(out)
-        return out
-    ```
 
 ---
 
@@ -128,7 +111,7 @@ class DiffWaveDenoiser(nn.Module):
 
 #### Full Timestep Embedder Code:
 ```python
-class TimestepEmbedder(nn.Module):
+class _TimestepEmbedder(nn.Module):
     def __init__(self, max_denoising_steps):
         super().__init__()
         self.register_buffer(
