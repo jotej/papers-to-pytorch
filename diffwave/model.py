@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from DDPM.model import DDPM
+from ddpm.model import DDPM
 
 
 class _TimestepEmbedder(nn.Module):
