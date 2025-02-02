@@ -100,12 +100,12 @@ class _MelUpsampler(nn.Module):
             torch.Tensor: Upsampled mel spectrogram tensor.
         """
         mel = mel.unsqueeze(1)      # (B, 1, N, T_mel)
-        mel = self.convt1(mel)      # (B, 1, N, 16 * T_mel)
-        mel = self.leaky_relu(mel)  # (B, 1, N, 16 * T_mel)
-        mel = self.convt2(mel)      # (B, 1, N, 256 * T_mel)
-        mel = self.leaky_relu(mel)  # (B, 1, N, 256 * T_mel)
-        mel = mel.squeeze(1)        # (B, N, 256 * T_mel)
-        return mel                  # (B, N, 256 * T_mel)
+        mel = self.convt1(mel)      # (B, 1, N, 16 * T_mel - 8)
+        mel = self.leaky_relu(mel)  # (B, 1, N, 16 * T_mel - 8)
+        mel = self.convt2(mel)      # (B, 1, N, 256 * T_mel - 128)
+        mel = self.leaky_relu(mel)  # (B, 1, N, 256 * T_mel - 128)
+        mel = mel.squeeze(1)        # (B, N, 256 * T_mel - 128)
+        return mel                  # (B, N, 256 * T_mel - 128)
 
 
 class _ResidualLayer(nn.Module):
@@ -258,20 +258,14 @@ class DiffWave(nn.Module):
         on mel spectrogram features if `is_conditional` is True.
 
         Args:
-            scheduler (str, optional): The scheduler type to use for the diffusion process. Defaults to 'linear_beta'.
+            scheduler (str, optional): The scheduler type to use for the diffusion process.
             denoising_steps (int, optional): The number of denoising steps in the diffusion process.
-                Defaults to 50.
-            in_channels (int, optional): Number of input channels. Defaults to 1.
+            in_channels (int, optional): Number of input channels.
             residual_channels (int, optional): Number of channels used in the residual blocks.
-                Defaults to 64.
             residual_layers (int, optional): Total number of residual layers in the model.
-                Must be evenly divisible by `residual_blocks`. Defaults to 30.
             residual_blocks (int, optional): Number of residual blocks in the model.
-                Defaults to 3.
             is_conditional (bool, optional): Whether the model is conditioned on mel spectrogram features.
-                Defaults to True.
             mel_bands (int, optional): Number of mel frequency bands for conditioning.
-                Required if `is_conditional` is True.
 
         Raises:
             ValueError: If `residual_layers` is not evenly divisible by `residual_blocks`.
