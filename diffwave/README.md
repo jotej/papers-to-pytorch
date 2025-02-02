@@ -15,8 +15,8 @@ time domain, supporting both conditional and unconditional audio synthesis.
 
 ## [Full Implementation](model.py)
 
-#### Custom Modules
-| Module                                       | Description                                   |
+#### Custom Classes
+| Classes                                      | Description                                   |
 |----------------------------------------------|-----------------------------------------------|
 | [DiffWaveDenoiser](#DiffWaveDenoiser-Module) | Model denoiser                                |
 | [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser                 |
