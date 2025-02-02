@@ -161,7 +161,17 @@ class _ResidualLayer(nn.Module):
 
 
 class _DiffWaveDenoiser(nn.Module):
-    """DiffWave model denoiser."""
+    """DiffWave model denoiser.
+
+    Attributes:
+        in_conv (nn.Conv1d): Input convolution layer.
+        timestep_embedder (_TimestepEmbedder): Denoising step embedding module.
+        mel_upsampler (_MelUpsampler): Mel upsampler module.
+        res_blocks (nn.ModuleList): Blocks or residual layers.
+        out_conv1 (nn.Conv1d): First output convolution layer.
+        out_conv2 (nn.Conv1d): Second output convolution layer.
+        relu (nn.ReLU): ReLU activation function.
+    """
     def __init__(self,
         in_channels: int,
         residual_channels: int,
@@ -227,15 +237,9 @@ class _DiffWaveDenoiser(nn.Module):
 class DiffWave(nn.Module):
     """The DiffWave model.
 
-    Args:
-        scheduler (str): Noise scheduler.
-        denoising steps (int): Number of denoising diffusion steps.
-        in_channels (int): Number of input channels.
-        residual_channels (int): Number of residual channels.
-        residual_layers (int): Number of residual layers.
-        residual_blocks (int): Number of residual blocks.
+    Attributes:
         is_conditional (bool): Whether the model is conditional or not.
-        mel_bands (int): Number of mel bands.
+        diffwave (DDPM): Diffwave model.
     """
     def __init__(self,
         scheduler: str = 'linear_beta',
