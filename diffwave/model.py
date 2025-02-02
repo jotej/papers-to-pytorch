@@ -4,8 +4,8 @@ from ddpm.model import DDPM
 from typing import Iterable
 
 """
-Dimension Symbols:
-------------------
+Dimensions:
+-----------
 
 | Symbol   | Description                                                 |
 |----------|-------------------------------------------------------------|
@@ -26,6 +26,8 @@ class _TimestepEmbedder(nn.Module):
         linear2 (nn.Linear): Linear layer.
         swish (nn.SiLU): SiLU activation function.
     """
+    timestep_embeddings: torch.Tensor
+
     def __init__(self, max_denoising_steps: int):
         """Initializes the TimestepEmbedder module.
 
