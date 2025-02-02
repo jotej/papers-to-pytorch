@@ -15,6 +15,15 @@ time domain, supporting both conditional and unconditional audio synthesis.
 
 ## [Full Implementation](model.py)
 
+#### Custom Modules
+| Module                                       | Description                                   |
+|----------------------------------------------|-----------------------------------------------|
+| [DiffWaveDenoiser](#DiffWaveDenoiser-Module) | Model denoiser                                |
+| [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser                 |
+| [MelUpsampler](#MelUpsampler-Module)         | Upsampler for conditional Mel spectrogram     |
+| [ResidualLayer](#ResidualLayer-Module)       | Individual layers of denoiser                 |
+| [DiffWave](#DiffWave-Module)                 | Model                                         |
+
 #### Dimension Symbols
 | Symbol          | Description                                                 |
 |-----------------|-------------------------------------------------------------|
@@ -24,16 +33,6 @@ time domain, supporting both conditional and unconditional audio synthesis.
 | $N$             | Number of mel frequency bins in conditional Mel spectrogram |
 | $T_{mel}$       | Total time frames in conditional Mel spectrogram            |
 | $T_{sample}$    | Total samples in waveform                                   |
-
-#### Custom Modules
-| Module                                       | Description                               |
-|----------------------------------------------|-------------------------------------------|
-| [DiffWaveDenoiser](#DiffWaveDenoiser-Module) | Model denoiser                            |
-| [TimestepEmbedder](#TimestepEmbedder-Module) | Timestep embedder of denoiser             |
-| [MelUpsampler](#MelUpsampler-Module)         | Upsampler for conditional Mel spectrogram |
-| [ResidualLayer](#ResidualLayer-Module)       | Individual layers of denoiser             |
-| [DiffWave](#DiffWave-Module)                 | Model                                     |
-
 
 *The entire model implementation is detailed below in what is believed to be the most intuitive order...*
 
