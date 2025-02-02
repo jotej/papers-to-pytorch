@@ -278,6 +278,7 @@ class _ResidualLayer(nn.Module):
 ### DiffWave Module
 
 ```python
+class DiffWave(nn.Module):
     """The DiffWave model.
 
     Attributes:
