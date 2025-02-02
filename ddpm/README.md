@@ -169,3 +169,5 @@ class DDPM(nn.Module):
         sqrt_alphas = self.sqrt_alphas[t].view(dim_match)                                      # (B, *[1]*len(D))
         return (x - betas * pred_eps / sqrt_one_minus_alphas_cumprod) / sqrt_alphas, pred_eps  # (B, *D), (B, *D)
 ```
+
+---
