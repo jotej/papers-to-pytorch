@@ -3,6 +3,19 @@ from torch import nn
 from ddpm.model import DDPM
 from typing import Iterable
 
+"""
+Dimension Symbols:
+------------------
+
+| Symbol   | Description                                                 |
+|----------|-------------------------------------------------------------|
+| B        | Batch size                                                  |
+| C_in     | Number of input channels                                    |
+| C_res    | Number of residual channels                                 |
+| N        | Number of mel frequency bins in conditional Mel spectrogram |
+| T_mel    | Total time frames in conditional Mel spectrogram            |
+| T_sample | Total samples in waveform                                   |
+"""
 
 class _TimestepEmbedder(nn.Module):
     """Embeds the timestep to inform the model of the current diffusion step.
