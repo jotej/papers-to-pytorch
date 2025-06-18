@@ -1,14 +1,5 @@
 # [DiffWave: A Versatile Diffusion Model for Audio Synthesis](https://openreview.net/pdf?id=a-xFK8Ymz5J)
 
-### Authors
-| Name                 | Affiliation                             |
-|----------------------|-----------------------------------------|
-| **Zhifeng Kong**     | Computer Science and Engineering, UCSD  |
-| **Jiaji Huang**      | Baidu Research                          |
-| **Kexin Zhao**       | Baidu Research                          |
-| **Wei Ping**         | NVIDIA                                  |
-| **Bryan Catanzaro**  | NVIDIA                                  |
-
 ### Model Description
 A non-autoregressive denoising diffusion probabilistic model for waveform generation directly in the
 time domain, supporting both conditional and unconditional audio synthesis.
